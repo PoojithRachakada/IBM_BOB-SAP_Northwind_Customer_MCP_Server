@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Northwind MCP Server - Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide {
+            width: 1280px;
+            height: 720px;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide.active {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .slide-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 50px;
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .slide-content {
+            padding: 50px;
+        }
+
+        .title-slide {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .title-slide h1 {
+            font-size: 4em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .title-slide p {
+            font-size: 1.8em;
+            opacity: 0.9;
+        }
+
+        .screenshot {
+            background: #f5f5f5;
+            border: 3px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .feature-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 5px solid #667eea;
+        }
+
+        .feature-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .feature-box ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-box li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .feature-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .chat-simulation {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .user-bubble {
+            background: #667eea;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 20px 20px 5px 20px;
+            margin: 10px 0;
+            margin-left: auto;
+            max-width: 70%;
+            text-align: right;
+        }
+
+        .bob-bubble {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 15px 20px;
+            border-radius: 5px 20px 20px 20px;
+            margin: 10px 0;
+            max-width: 80%;
+        }
+
+        .tool-badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            display: inline-block;
+            margin: 5px 0;
+        }
+
+        .result-box {
+            background: #f5f5f5;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .nav-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            color: white;
+            font-size: 1.2em;
+            z-index: 1000;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .architecture-diagram {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .diagram-box {
+            display: inline-block;
+            background: #f8f9fa;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px 30px;
+            margin: 10px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .arrow {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 2em;
+            color: #667eea;
+        }
+
+        .print-instruction {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            z-index: 1000;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .slide {
+                page-break-after: always;
+                display: block !important;
+                box-shadow: none;
+                margin: 0;
+            }
+            .navigation, .slide-number, .print-instruction {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-instruction">
+        Press Ctrl+P (Cmd+P on Mac) to save as PDF
+    </div>
+
+    <div class="slide-number">
+        <span id="currentSlide">1</span> / <span id="totalSlides">15</span>
+    </div>
+
+    <div class="slide-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active title-slide">
+            <h1>🚀 Northwind MCP Server</h1>
+            <p>AI-Powered Database Queries Using Model Context Protocol</p>
+            <div style="margin-top: 50px; font-size: 0.8em; opacity: 0.8;">
+                <p>Demonstrating Natural Language Database Access</p>
+                <p style="margin-top: 10px;">Press → to continue</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: What is MCP? -->
+        <div class="slide">
+            <div class="slide-header">What is Model Context Protocol (MCP)?</div>
+            <div class="slide-content">
+                <div class="architecture-diagram">
+                    <div class="diagram-box">👤 User</div>
+                    <span class="arrow">→</span>
+                    <div class="diagram-box">🤖 Bob AI</div>
+                    <span class="arrow">→</span>
+                    <div class="diagram-box">🔧 MCP Server</div>
+                    <span class="arrow">→</span>
+                    <div class="diagram-box">💾 Database</div>
+                </div>
+                <div class="two-column">
+                    <div class="feature-box">
+                        <h3>🎯 What It Does</h3>
+                        <ul>
+                            <li>Bridges AI agents and external tools</li>
+                            <li>Standardized protocol for tool access</li>
+                            <li>Enables natural language queries</li>
+                            <li>No SQL knowledge required</li>
+                        </ul>
+                    </div>
+                    <div class="feature-box">
+                        <h3>✨ Key Benefits</h3>
+                        <ul>
+                            <li>Democratizes data access</li>
+                            <li>Faster insights (seconds vs hours)</li>
+                            <li>Intelligent analysis included</li>
+                            <li>Extensible architecture</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Northwind MCP Server Overview -->
+        <div class="slide">
+            <div class="slide-header">Northwind MCP Server Overview</div>
+            <div class="slide-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">26</div>
+                        <div class="stat-label">MCP Tools</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">11</div>
+                        <div class="stat-label">Core Entities</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">15</div>
+                        <div class="stat-label">Business Views</div>
+                    </div>
+                </div>
+                <div class="two-column" style="margin-top: 40px;">
+                    <div class="feature-box">
+                        <h3>📊 Core Entities</h3>
+                        <ul>
+                            <li>Customers</li>
+                            <li>Products</li>
+                            <li>Orders & Order Details</li>
+                            <li>Employees</li>
+                            <li>Categories & Suppliers</li>
+                            <li>Shippers, Regions, Territories</li>
+                        </ul>
+                    </div>
+                    <div class="feature-box">
+                        <h3>📈 Business Views</h3>
+                        <ul>
+                            <li>Sales by Category (1997)</li>
+                            <li>Product Sales Reports</li>
+                            <li>Order Subtotals</li>
+                            <li>Quarterly/Yearly Sales</li>
+                            <li>Invoices & Analytics</li>
+                            <li>Above Average Pricing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Demo 1 - Simple Query -->
+        <div class="slide">
+            <div class="slide-header">Demo 1: Simple Customer Query</div>
+            <div class="slide-content">
+                <div class="chat-simulation">
+                    <div class="user-bubble">
+                        Show me all customers from London
+                    </div>
+                    <div class="bob-bubble">
+                        <div class="tool-badge">🔧 Tool: get_customers</div>
+                        <div class="tool-badge">📋 Filter: City eq 'London'</div>
+                        <div class="result-box">
+{<br>
+  "CustomerID": "AROUT",<br>
+  "CompanyName": "Around the Horn",<br>
+  "ContactName": "Thomas Hardy",<br>
+  "City": "London",<br>
+  "Phone": "(171) 555-7788"<br>
+}<br>
+... 5 more customers
+                        </div>
+                        <p style="margin-top: 15px;"><strong>💡 Analysis:</strong> Found 6 customers in London. All UK-based with complete contact information.</p>
+                    </div>
+                </div>
+                <div class="feature-box" style="margin-top: 20px;">
+                    <h3>🎯 Key Points</h3>
+                    <ul>
+                        <li>Natural language input - no SQL needed</li>
+                        <li>Bob automatically selected the right tool</li>
+                        <li>Applied OData filter automatically</li>
+                        <li>Returned structured, formatted results</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Demo 2 - Product Analysis -->
+        <div class="slide">
+            <div class="slide-header">Demo 2: Product Price Analysis</div>
+            <div class="slide-content">
+                <div class="chat-simulation">
+                    <div class="user-bubble">
+                        What are the 5 most expensive products?
+                    </div>
+                    <div class="bob-bubble">
+                        <div class="tool-badge">🔧 Tool: get_products</div>
+                        <div class="tool-badge">📋 Sort: UnitPrice desc | Limit: 5</div>
+                        <div class="result-box">
+1. Côte de Blaye - $263.50 (Beverages)<br>
+2. Thüringer Rostbratwurst - $123.79 (Meat) ⚠️ Discontinued<br>
+3. Mishi Kobe Niku - $97.00 (Meat) ⚠️ Discontinued<br>
+4. Sir Rodney's Marmalade - $81.00 (Confections)<br>
+5. Carnarvon Tigers - $62.50 (Seafood)
+                        </div>
+                        <p style="margin-top: 15px;"><strong>💡 Analysis:</strong> Top 5 products range from $62.50 to $263.50. Note: 2 of the 5 most expensive items are discontinued, suggesting premium products may have limited availability.</p>
+                    </div>
+                </div>
+                <div class="feature-box" style="margin-top: 20px;">
+                    <h3>🎯 Intelligence Demonstrated</h3>
+                    <ul>
+                        <li>Automatic sorting by price (descending)</li>
+                        <li>Limited results to top 5</li>
+                        <li>Bob identified discontinued items</li>
+                        <li>Provided business insight about availability</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Demo 3 - Sales Analysis -->
+        <div class="slide">
+            <div class="slide-header">Demo 3: Sales Analytics</div>
+            <div class="slide-content">
+                <div class="chat-simulation">
+                    <div class="user-bubble">
+                        Analyze sales by category for 1997
+                    </div>
+                    <div class="bob-bubble">
+                        <div class="tool-badge">🔧 Tool: get_category_sales_1997</div>
+                        <div class="result-box">
+📊 1997 Sales by Category:<br><br>
+1. Beverages: $267,868 (24.5%) 🥇<br>
+2. Dairy Products: $234,507 (21.4%)<br>
+3. Confections: $167,357 (15.3%)<br>
+4. Meat/Poultry: $163,022 (14.9%)<br>
+5. Seafood: $131,262 (12.0%)
+                        </div>
+                        <p style="margin-top: 15px;"><strong>💡 Analysis:</strong> Beverages led 1997 sales at $267,868 (24.5%). Top 3 categories account for 61.2% of total revenue. <span class="highlight">Recommendation: Consider expanding Beverages inventory.</span></p>
+                    </div>
+                </div>
+                <div class="feature-box" style="margin-top: 20px;">
+                    <h3>🎯 Business Intelligence</h3>
+                    <ul>
+                        <li>Used specialized business view tool</li>
+                        <li>Calculated percentages automatically</li>
+                        <li>Identified top performer</li>
+                        <li>Provided actionable recommendation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Demo 4 - Complex Query -->
+        <div class="slide">
+            <div class="slide-header">Demo 4: Complex Multi-Condition Query</div>
+            <div class="slide-content">
+                <div class="chat-simulation">
+                    <div class="user-bubble">
+                        Find products between $20-$50, not discontinued, with stock > 10
+                    </div>
+                    <div class="bob-bubble">
+                        <div class="tool-badge">🔧 Tool: get_products</div>
+                        <div class="tool-badge">📋 Filter: UnitPrice ge 20 AND UnitPrice le 50 AND Discontinued eq false AND UnitsInStock gt 10</div>
+                        <div class="result-box">
+Found 5 products:<br><br>
+• Queso Cabrales - $21.00 (Stock: 22)<br>
+• Camembert Pierrot - $34.00 (Stock: 19)<br>
+• Ipoh Coffee - $46.00 (Stock: 17)<br>
+• Rössle Sauerkraut - $45.60 (Stock: 26)<br>
+• Gnocchi di nonna Alice - $38.00 (Stock: 21)
+                        </div>
+                        <p style="margin-top: 15px;"><strong>💡 Analysis:</strong> 5 products match all criteria. Primarily Dairy and Beverages. All have healthy stock levels. These represent mid-to-premium price point with good availability.</p>
+                    </div>
+                </div>
+                <div class="feature-box" style="margin-top: 20px;">
+                    <h3>🎯 Advanced Capabilities</h3>
+                    <ul>
+                        <li>Multiple conditions in single query</li>
+                        <li>Complex OData filter generation</li>
+                        <li>No manual SQL joins required</li>
+                        <li>Intelligent result interpretation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: Configuration -->
+        <div class="slide">
+            <div class="slide-header">Setup & Configuration</div>
+            <div class="slide-content">
+                <h3 style="margin-bottom: 20px; color: #667eea;">MCP Server Configuration</h3>
+                <div class="code-block">
+{<br>
+  "mcpServers": {<br>
+    "northwind": {<br>
+      "command": "node",<br>
+      "args": [<br>
+        "C:/path/to/northwind-server/build/index.js"<br>
+      ],<br>
+      "disabled": false,<br>
+      "alwaysAllow": [],<br>
+      "disabledTools": []<br>
+    }<br>
+  }<br>
+}
+                </div>
+                <div class="two-column" style="margin-top: 30px;">
+                    <div class="feature-box">
+                        <h3>📦 Installation Steps</h3>
+                        <ul>
+                            <li>Install Node.js</li>
+                            <li>Clone MCP server repository</li>
+                            <li>Run npm install</li>
+                            <li>Build with npm run build</li>
+                            <li>Configure in Bob settings</li>
+                        </ul>
+                    </div>
+                    <div class="feature-box">
+                        <h3>✅ Verification</h3>
+                        <ul>
+                            <li>Open Bob AI Assistant</li>
+                            <li>Check MCP server status</li>
+                            <li>Should show "northwind" connected</li>
+                            <li>Test with simple query</li>
+                            <li>Ready to demo!</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Available Tools -->
+        <div class="slide">
+            <div class="slide-header">26 Available MCP Tools</div>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div>
+                        <div class="feature-box">
+                            <h3>📊 Core Entity Tools</h3>
+                            <ul style="font-size: 0.9em;">
+                                <li>get_customers</li>
+                                <li>get_products</li>
+                                <li>get_orders</li>
+                                <li>get_order_details</li>
+                                <li>get_employees</li>
+                                <li>get_categories</li>
+                                <li>get_suppliers</li>
+                                <li>get_shippers</li>
+                                <li>get_regions</li>
+                                <li>get_territories</li>
+                                <li>get_customer_demographics</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="feature-box">
+                            <h3>📈 Business View Tools</h3>
+                            <ul style="font-size: 0.9em;">
+                                <li>get_alphabetical_products</li>
+                                <li>get_category_sales_1997</li>
+                                <li>get_current_product_list</li>
+                                <li>get_customers_suppliers_by_city</li>
+                                <li>get_invoices</li>
+                                <li>get_order_details_extended</li>
+                                <li>get_order_subtotals</li>
+                                <li>get_orders_query</li>
+                                <li>get_product_sales_1997</li>
+                                <li>get_products_above_average_price</li>
+                                <li>get_products_by_category</li>
+                                <li>get_sales_by_category</li>
+                                <li>get_sales_totals_by_amount</li>
+                                <li>get_sales_by_quarter</li>
+                                <li>get_sales_by_year</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Query Parameters -->
+        <div class="slide">
+            <div class="slide-header">OData Query Parameters</div>
+            <div class="slide-content">
+                <p style="font-size: 1.2em; margin-bottom: 30px;">All tools support flexible OData query parameters:</p>
+                <div class="two-column">
+                    <div class="feature-box">
+                        <h3>🔍 Filtering</h3>
+                        <div class="code-block" style="margin-top: 15px;">
+filter: "Country eq 'USA'"<br>
+filter: "UnitPrice gt 20"<br>
+filter: "City eq 'London' and<br>
+        ContactTitle eq 'Owner'"
+                        </div>
+                    </div>
+                    <div class="feature-box">
+                        <h3>📊 Sorting</h3>
+                        <div class="code-block" style="margin-top: 15px;">
+orderby: "CompanyName asc"<br>
+orderby: "UnitPrice desc"<br>
+orderby: "OrderDate desc"
+                        </div>
+                    </div>
+                </div>
+                <div class="two-column" style="margin-top: 20px;">
+                    <div class="feature-box">
+                        <h3>📄 Pagination</h3>
+                        <div class="code-block" style="margin-top: 15px;">
+top: 10  // First 10 records<br>
+skip: 20 // Skip first 20<br>
+top: 25, skip: 50 // Page 3
+                        </div>
+                    </div>
+                    <div class="feature-box">
+                        <h3>🎯 Field Selection</h3>
+                        <div class="code-block" style="margin-top: 15px;">
+select: "CustomerID,<br>
+         CompanyName,<br>
+         City"
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Use Cases -->
+        <div class="slide">
+            <div class="slide-header">Real-World Use Cases</div>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div class="feature-box">
+                        <h3>👔 For Business Analysts</h3>
+                        <ul>
+                            <li>Explore data without IT support</li>
+                            <li>Generate ad-hoc reports instantly</li>
+                            <li>Analyze trends and patterns</li>
+                            <li>Export data for presentations</li>
+                        </ul>
+                    </div>
+                    <div class="feature-box">
+                        <h3>💻 For Developers</h3>
+                        <ul>
+                            <li>Rapid prototyping and testing</li>
+                            <li>Interactive query development</li>
+                            <li>API exploration and learning</li>
+                            <li>Debug data issues quickly</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="two-column" style="margin-top: 20px;">
+                    <div class="feature-box">
+                        <h3>📊 For Data Scientists</h3>
+                        <ul>
+                            <li>Quick dataset investigation</li>
+                            <li>Feature exploration</li>
+                            <li>Data quality checks</li>
+                            <li>Sample data extraction</li>
+                        </ul>
+                    </div>
+                    <div class="feature-box">
+                        <h3>🎯 For Executives</h3>
+                        <ul>
+                            <li>Instant business insights</li>
+                            <li>Real-time KPI monitoring</li>
+                            <li>Strategic decision support</li>
+                            <li>No technical barrier</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Benefits -->
+        <div class="slide">
+            <div class="slide-header">Key Benefits</div>
+            <div class="slide-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">SQL Knowledge Required</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">< 5s</div>
+                        <div class="stat-label">Average Query Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Natural Language</div>
+                    </div>
+                </div>
+                <div class="two-column" style="margin-top: 40px;">
+                    <div class="feature-box">
+                        <h3>✨ For Users</h3>
+                        <ul>
+                            <li>No SQL or technical knowledge needed</li>
+                            <li>Instant insights from questions</li>
+                            <li>AI-powered analysis included</li>
+                            <li>Accessible to everyone</li>
+                            <li>Reduces dependency on IT</li>
+                        </ul>
+                    </div>
+                    <div class="feature-box">
+                        <h3>🚀 For Organizations</h3>
+                        <ul>
+                            <li>Democratizes data access</li>
+                            <li>Faster decision making</li>
+                            <li>Reduced IT workload</li>
+                            <li>Extensible to any data source</li>
+                            <li>Standardized protocol (MCP)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Comparison -->
+        <div class="slide">
+            <div class="slide-header">Traditional vs MCP Approach</div>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div>
+                        <h3 style="color: #f44336; margin-bottom: 20px;">❌ Traditional Approach</h3>
+                        <div class="code-block">
+SELECT c.CustomerID,<br>
+       c.CompanyName,<br>
+       c.ContactName,<br>
+       c.City<br>
+FROM Customers c<br>
+WHERE c.City = 'London'<br>
+ORDER BY c.CompanyName;
+                        </div>
+                        <div class="feature-box" style="margin-top: 20px; border-left-color: #f44336;">
+                            <ul>
+                                <li>Requires SQL knowledge</li>
+                                <li>Need database access</li>
+                                <li>Manual query writing</li>
+                                <li>No built-in analysis</li>
+                                <li>Time-consuming</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="color: #4caf50; margin-bottom: 20px;">✅ MCP Approach</h3>
+                        <div class="chat-simulation">
+                            <div class="user-bubble">
+                                Show me all customers from London
+                            </div>
+                            <div class="bob-bubble">
+                                <p><strong>Results:</strong> 6 customers found</p>
+                                <p style="margin-top: 10px;"><strong>Analysis:</strong> All UK-based with complete contact info</p>
+                            </div>
+                        </div>
+                        <div class="feature-box" style="margin-top: 20px; border-left-color: #4caf50;">
+                            <ul>
+                                <li>Natural language only</li>
+                                <li>No technical skills needed</li>
+                                <li>Instant results</li>
+                                <li>AI analysis included</li>
+                                <li>Seconds, not minutes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Getting Started -->
+        <div class="slide">
+            <div class="slide-header">Getting Started</div>
+            <div class="slide-content">
+                <div class="feature-box" style="background: #e8f5e9; border-left-color: #4caf50;">
+                    <h3>📦 Quick Start (5 minutes)</h3>
+                    <ol style="padding-left: 20px; margin-top: 15px; line-height: 2;">
+                        <li><strong>Install Bob AI Assistant</strong> - Download from official website</li>
+                        <li><strong>Clone Northwind MCP Server</strong> - Get from repository</li>
+                        <li><strong>Build the Server</strong> - Run <code style="background: #fff; padding: 2px 6px; border-radius: 3px;">npm install && npm run build</code></li>
+                        <li><strong>Configure Bob</strong> - Add server to mcp_settings.json</li>
+                        <li><strong>Start Querying!</strong> - Ask Bob your first question</li>
+                    </ol>
+                </div>
+                <div class="two-column" style="margin-top: 30px;">
+                    <div class="feature-box">
+                        <h3>📚 Resources</h3>
+                        <ul>
+                            <li>Complete demo package included</li>
+                            <li>100+ example queries</li>
+                            <li>Video tutorials available</li>
+                            <li>Interactive HTML demo</li>
+                            <li>Troubleshooting guide</li>
+                        </ul>
+                    </div>
+                    <div class="feature-box">
+                        <h3>🔗 Links</h3>
+                        <ul>
+                            <li>MCP Specification</li>
+                            <li>Northwind API Documentation</li>
+                            <li>Bob AI Documentation</li>
+                            <li>GitHub Repository</li>
+                            <li>Community Support</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Thank You -->
+        <div class="slide title-slide">
+            <h1>Thank You! 🎉</h1>
+            <p style="margin-top: 30px;">Questions?</p>
+            <div style="margin-top: 50px; font-size: 0.9em; opacity: 0.9;">
+                <p>📧 Contact: Your Email</p>
+                <p style="margin-top: 10px;">🔗 Repository: GitHub Link</p>
+                <p style="margin-top: 10px;">📚 Documentation: Demo Package Included</p>
+            </div>
+            <div style="margin-top: 50px; font-size: 0.8em; opacity: 0.8;">
+                <p>Press Ctrl+P (Cmd+P) to save as PDF</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        document.getElementById('totalSlides').textContent = totalSlides;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = currentSlide + 1;
+            
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key === 'Home') showSlide(0);
+            if (e.key === 'End') showSlide(totalSlides - 1);
+        });
+
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>
